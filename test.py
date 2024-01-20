@@ -14,7 +14,7 @@ def process_image(img):
     # Returning the detected hands to calling function
     return results
 
-def draw_hand_connections(img, results, return_image=False, size=150, draw=True):
+def draw_hand_connections(img, results, return_image=False, size=200, draw=True):
     h, w, c = img.shape
     hand_images = []
     if results.multi_hand_landmarks:
