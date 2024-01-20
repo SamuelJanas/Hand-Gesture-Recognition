@@ -17,11 +17,20 @@ def process_image(img):
 def draw_hand_connections(img, results):
     if results.multi_hand_landmarks:
         for handLms in results.multi_hand_landmarks:
+            x_max = 0
+            y_max = 0
+            x_min = 1000
+            y_min = 1000
             for id, lm in enumerate(handLms.landmark):
                 h, w, c = img.shape
 
                 # Finding the coordinates of each landmark
                 cx, cy = int(lm.x * w), int(lm.y * h)
+                x_max = max(cx, x_max)
+                y_max = max(cy, y_max)
+                x_min = min(cx, x_min)
+                y_min = min(cy, y_min)
+                
 
                 # Printing each landmark ID and coordinates
                 # on the terminal
@@ -33,78 +42,22 @@ def draw_hand_connections(img, results):
                 # Drawing the landmark connections
                 mpDraw.draw_landmarks(img, handLms,
                                       mpHands.HAND_CONNECTIONS)
+            cv2.boundingRect(img, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
 
         return img
 
-
-# draw bounding box around hand
-def draw_bounding_box(img, results, padding=20):
-    if results.multi_hand_landmarks:
-        for handLms in results.multi_hand_landmarks:
-            # bounding box
-            x_max = 0
-            x_min = 100000
-            y_max = 0
-            y_min = 100000
-            for id, lm in enumerate(handLms.landmark):
-                h, w, c = img.shape
-
-                # Finding the coordinates of each landmark
-                cx, cy = int(lm.x * w), int(lm.y * h)
-                if cx > x_max:
-                    x_max = cx
-                if cx < x_min:
-                    x_min = cx
-                if cy > y_max:
-                    y_max = cy
-                if cy < y_min:
-                    y_min = cy
-
-            # Drawing the bounding box
-            cv2.rectangle(img, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
-
-            # keep the bounded area with padding = 20 pixels in seperata variable
-            # check if the bounded area with padding is within the image
-            # if not, then set the padding to the maximum possible value
-
-            if x_min - padding < 0:
-                x_min = 0
-            else:
-                x_min = x_min - padding
-
-            if x_max + padding > w:
-                x_max = w
-            else:
-                x_max = x_max + padding
-
-            if y_min - padding < 0:
-                y_min = 0
-            else:
-                y_min = y_min - padding
-
-            if y_max + padding > h:
-                y_max = h
-            else:
-                y_max = y_max + padding
-
-            bounded_area = img[y_min:y_max, x_min:x_max]
-
-
-        return img, bounded_area
 
 cap = cv2.VideoCapture(0)
 
 while True:
     # Taking the input
     success, image = cap.read()
-    image = imutils.resize(image, width=500, height=500)
+    image = imutils.resize(image, width=1000, height=1000)
     results = process_image(image)
-    # draw_hand_connections(image, results)
-    img, bounded_area = draw_bounding_box(image, results)
+    image = draw_hand_connections(image, results)
 
     # Displaying the output
     cv2.imshow("Hand tracker", image)
-    cv2.imshow("Bounded area", bounded_area)
 
     # Program terminates when q key is pressed
     if cv2.waitKey(1) == ord('q'):
