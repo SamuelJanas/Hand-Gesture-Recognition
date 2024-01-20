@@ -38,7 +38,7 @@ def draw_hand_connections(img, results):
 
 
 # draw bounding box around hand
-def draw_bounding_box(img, results):
+def draw_bounding_box(img, results, padding=20):
     if results.multi_hand_landmarks:
         for handLms in results.multi_hand_landmarks:
             # bounding box
@@ -63,7 +63,34 @@ def draw_bounding_box(img, results):
             # Drawing the bounding box
             cv2.rectangle(img, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
 
-        return img
+            # keep the bounded area with padding = 20 pixels in seperata variable
+            # check if the bounded area with padding is within the image
+            # if not, then set the padding to the maximum possible value
+
+            if x_min - padding < 0:
+                x_min = 0
+            else:
+                x_min = x_min - padding
+
+            if x_max + padding > w:
+                x_max = w
+            else:
+                x_max = x_max + padding
+
+            if y_min - padding < 0:
+                y_min = 0
+            else:
+                y_min = y_min - padding
+
+            if y_max + padding > h:
+                y_max = h
+            else:
+                y_max = y_max + padding
+
+            bounded_area = img[y_min:y_max, x_min:x_max]
+
+
+        return img, bounded_area
 
 cap = cv2.VideoCapture(0)
 
@@ -73,10 +100,11 @@ while True:
     image = imutils.resize(image, width=500, height=500)
     results = process_image(image)
     # draw_hand_connections(image, results)
-    draw_bounding_box(image, results)
+    img, bounded_area = draw_bounding_box(image, results)
 
     # Displaying the output
     cv2.imshow("Hand tracker", image)
+    cv2.imshow("Bounded area", bounded_area)
 
     # Program terminates when q key is pressed
     if cv2.waitKey(1) == ord('q'):
