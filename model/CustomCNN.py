@@ -10,6 +10,10 @@ def conv_block(in_channels, out_channels, pool=False):
     return nn.Sequential(*layers)
 
 class CustomCNN(nn.Module):
+    """
+    Custom Model based on ResNet9
+    
+    """
     def __init__(self, in_channels, num_classes):
         super().__init__()
         

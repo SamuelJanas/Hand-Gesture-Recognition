@@ -2,9 +2,8 @@ import cv2
 import mediapipe as mp
 import imutils
 import torch
-from model.CustomCNN import CustomResNet18 
+from model.CustomCNN import CustomCNN
 import torchvision.transforms.functional as TF
-from model.SelfMadeCNN import SelfMadeResNet
 
 mpHands = mp.solutions.hands
 hands = mpHands.Hands()
@@ -25,25 +24,24 @@ def draw_hand_connections(img, results, return_image=False, size=200, draw=True,
         for handLms in results.multi_hand_landmarks:
             x_values = [int(lm.x * img.shape[1]) for lm in handLms.landmark]
             y_values = [int(lm.y * img.shape[0]) for lm in handLms.landmark]
+            # Get the bounding box
             x_min, x_max = min(x_values), max(x_values)
             y_min, y_max = min(y_values), max(y_values)
-            x_center, y_center = (x_min + x_max) // 2, (y_min + y_max) // 2
+            x_center, y_center = (x_min + x_max) // 2, (y_min + y_max) // 2 # for image cropping
 
             
             for id, lm in enumerate(handLms.landmark):
                 if draw:
+                    # Draw landmarks only if prompted
                     cx, cy = x_values[id], y_values[id]
                     cv2.circle(img, (cx, cy), 10, (0, 255, 0), cv2.FILLED)
                     mpDraw.draw_landmarks(img, handLms, mpHands.HAND_CONNECTIONS)
-
             if draw:
                 cv2.rectangle(img, (x_min, y_min), (x_max, y_max), (255, 0, 0), 2)
+
             if return_image:
-                # take size x size image around the center of the hand
-                # beware of the boundaries
-                # returned image should be of size (2*size, 2*size, 3)
-                # if the hand is too close to the boundary return 2*size from the boundary
-                
+                # If we want to look for fragments
+                # Check if not out of bounds
                 if x_center - size < 0:
                     x_center = size
                 if x_center + size > w:
@@ -54,8 +52,9 @@ def draw_hand_connections(img, results, return_image=False, size=200, draw=True,
                     y_center = h - size
                 hand_images.append(img[y_center-size:y_center+size, x_center-size:x_center+size])
                 if predict:
+                    # If we want to predict the class
                     x = TF.to_tensor(hand_images[-1])
-                    x = TF.resize(x, (400, 400), antialias=True)
+                    x = TF.resize(x, (200, 200), antialias=True)
                     x.unsqueeze_(0)
                     output = model(x.to('cuda'))
                     predicted_class = label_names[torch.argmax(output).item()]
@@ -63,8 +62,8 @@ def draw_hand_connections(img, results, return_image=False, size=200, draw=True,
 
     return img, hand_images
 
-checkpoint = torch.load('checkpoints/resnet18_best_acc.pth')
-model = CustomResNet18()
+checkpoint = torch.load('checkpoints/resnet9_best_acc.pth')
+model = CustomCNN(in_channels=3, num_classes=18)
 model.load_state_dict(checkpoint['state_dict'])
 model.to('cuda')
 model.eval()
@@ -88,11 +87,13 @@ while True:
     # Displaying the output
     cv2.imshow("Hand tracker", image)
 
-    if len(hand_fragments) > 0:
-        for i, hand in enumerate(hand_fragments):
 
-            cv2.imshow(f"Hand {i}", hand)
-            break
+    # Additional display #############
+    # Feel free to unccomment this to see the images in separate windows
+
+    # if len(hand_fragments) > 0:
+    #     for i, hand in enumerate(hand_fragments):
+    #         cv2.imshow(f"Hand {i}", hand)
         
     if cv2.waitKey(1) == ord('p'):
         predict = not predict
