@@ -1,7 +1,8 @@
 import cv2
 import mediapipe as mp
 import imutils
-import torch 
+import torch
+from model.CustomCNN import CustomResNet18 
 from model.SelfMadeCNN import SelfMadeResNet
 
 mpHands = mp.solutions.hands
@@ -51,11 +52,14 @@ def draw_hand_connections(img, results, return_image=False, size=200, draw=True)
                 if y_center + size > h:
                     y_center = h - size
                 hand_images.append(img[y_center-size:y_center+size, x_center-size:x_center+size])
+                tensor = torch.from_numpy(hand_images[-1]).permute(2, 0, 1).unsqueeze(0).float().to('cuda')
+                output = model(tensor)
+                cv2.putText(img, label_names[output.argmax(dim=1, keepdim=True).item()], (x_center, y_center), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
     return img, hand_images
 
-checkpoint = torch.load('checkpoints/default_best_acc.pth')
-model = SelfMadeResNet(num_blocks=[3, 4], num_classes=18)
+checkpoint = torch.load('checkpoints/resnet18_best_acc.pth')
+model = CustomResNet18()
 model.load_state_dict(checkpoint['state_dict'])
 model.to('cuda')
 model.eval()
@@ -75,12 +79,7 @@ while True:
 
     if len(hand_fragments) > 0:
         for i, hand in enumerate(hand_fragments):
-            hand_tensor = torch.from_numpy(hand).permute(2, 0, 1).unsqueeze(0).float().to('cuda')
-            output = model(hand_tensor)
             # display 3 most probable classes
-            _, indices = torch.sort(output, descending=True)
-            for j in range(3):
-                cv2.putText(hand, label_names[indices[0][j]], (10, 30 + j*30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
             cv2.imshow(f"Hand {i}", hand)
 
     if cv2.waitKey(1) == ord('d'):

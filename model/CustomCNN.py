@@ -1,27 +1,46 @@
 import torch.nn as nn
+from torchvision import models
+
+
+def conv_block(in_channels, out_channels, pool=False):
+    layers = [nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1), 
+              nn.BatchNorm2d(out_channels), 
+              nn.ReLU(inplace=True)]
+    if pool: layers.append(nn.MaxPool2d(2))
+    return nn.Sequential(*layers)
 
 class CustomCNN(nn.Module):
-    def __init__(self, num_classes):
-        super(CustomCNN, self).__init__()
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, padding=1)
-        self.relu1 = nn.ReLU()
-        self.conv2 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
-        self.relu2 = nn.ReLU()
-        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.flatten = nn.Flatten()
-        self.fc1 = nn.Linear(128 * 200 * 200, 256)
-        self.relu3 = nn.ReLU()
-        self.fc2 = nn.Linear(256, num_classes)
-
+    def __init__(self, in_channels, num_classes):
+        super().__init__()
+        
+        self.conv1 = conv_block(in_channels, 64)
+        self.conv2 = conv_block(64, 128, pool=True)
+        self.res1 = nn.Sequential(conv_block(128, 128), conv_block(128, 128))
+        
+        self.conv3 = conv_block(128, 256, pool=True)
+        self.conv4 = conv_block(256, 512, pool=True)
+        self.res2 = nn.Sequential(conv_block(512, 512), conv_block(512, 512))
+        
+        self.classifier = nn.Sequential(nn.AdaptiveMaxPool2d((1,1)), 
+                                        nn.Flatten(), 
+                                        nn.Dropout(0.2),
+                                        nn.Linear(512, num_classes))
+        
+    def forward(self, xb):
+        out = self.conv1(xb)
+        out = self.conv2(out)
+        out = self.res1(out) + out
+        out = self.conv3(out)
+        out = self.conv4(out)
+        out = self.res2(out) + out
+        out = self.classifier(out)
+        return out
+    
+class CustomResNet18(nn.Module):
+    def __init__(self, num_classes = 18):
+        super(CustomResNet18, self).__init__()
+        self.resnet = models.resnet18(pretrained=True)
+        self.resnet.fc = nn.Linear(512, num_classes)
+        
     def forward(self, x):
-        x = self.conv1(x)
-        x = self.relu1(x)
-        x = self.pool(x)
-        x = self.conv2(x)
-        x = self.relu2(x)
-        x = self.pool(x)
-        x = self.flatten(x)
-        x = self.fc1(x)
-        x = self.relu3(x)
-        x = self.fc2(x)
-        return x
+        return self.resnet(x)

@@ -1,5 +1,5 @@
 seed: 23
-run_name: 'default'
+run_name: 'resnet18'
 
 train:
   learning_rate: 3e-4
