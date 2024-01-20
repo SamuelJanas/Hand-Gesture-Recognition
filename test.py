@@ -37,6 +37,34 @@ def draw_hand_connections(img, results):
         return img
 
 
+# draw bounding box around hand
+def draw_bounding_box(img, results):
+    if results.multi_hand_landmarks:
+        for handLms in results.multi_hand_landmarks:
+            # bounding box
+            x_max = 0
+            x_min = 100000
+            y_max = 0
+            y_min = 100000
+            for id, lm in enumerate(handLms.landmark):
+                h, w, c = img.shape
+
+                # Finding the coordinates of each landmark
+                cx, cy = int(lm.x * w), int(lm.y * h)
+                if cx > x_max:
+                    x_max = cx
+                if cx < x_min:
+                    x_min = cx
+                if cy > y_max:
+                    y_max = cy
+                if cy < y_min:
+                    y_min = cy
+
+            # Drawing the bounding box
+            cv2.rectangle(img, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
+
+        return img
+
 cap = cv2.VideoCapture(0)
 
 while True:
@@ -44,7 +72,8 @@ while True:
     success, image = cap.read()
     image = imutils.resize(image, width=500, height=500)
     results = process_image(image)
-    draw_hand_connections(image, results)
+    # draw_hand_connections(image, results)
+    draw_bounding_box(image, results)
 
     # Displaying the output
     cv2.imshow("Hand tracker", image)
