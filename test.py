@@ -1,6 +1,8 @@
 import cv2
 import mediapipe as mp
-import imutils 
+import imutils
+import torch 
+from model.SelfMadeCNN import SelfMadeResNet
 
 mpHands = mp.solutions.hands
 hands = mpHands.Hands()
@@ -52,6 +54,13 @@ def draw_hand_connections(img, results, return_image=False, size=200, draw=True)
 
     return img, hand_images
 
+checkpoint = torch.load('checkpoints/default_best_acc.pth')
+model = SelfMadeResNet(num_blocks=[3, 4], num_classes=18)
+model.load_state_dict(checkpoint['state_dict'])
+model.to('cuda')
+model.eval()
+label_names = ['call', 'dislike', 'fist', 'four', 'like', 'mute', 'ok', 'one', 'palm', 'peace', 'peace_inverted', 'rock', 'stop', 'stop_inverted', 'three', 'three2', 'two_up', 'two_up_inverted']
+
 cap = cv2.VideoCapture(0)
 draw_boxes = False
 while True:
@@ -66,6 +75,12 @@ while True:
 
     if len(hand_fragments) > 0:
         for i, hand in enumerate(hand_fragments):
+            hand_tensor = torch.from_numpy(hand).permute(2, 0, 1).unsqueeze(0).float().to('cuda')
+            output = model(hand_tensor)
+            # display 3 most probable classes
+            _, indices = torch.sort(output, descending=True)
+            for j in range(3):
+                cv2.putText(hand, label_names[indices[0][j]], (10, 30 + j*30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
             cv2.imshow(f"Hand {i}", hand)
 
     if cv2.waitKey(1) == ord('d'):

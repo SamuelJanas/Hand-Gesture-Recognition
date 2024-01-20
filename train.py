@@ -6,7 +6,8 @@ from omegaconf import OmegaConf
 from utils.data import load_data
 from utils.utils import set_seed
 
-from model.SimpleCNN import SimpleCNN
+from model.SelfMadeCNN import SelfMadeResNet
+# from model.CustomCNN import CustomCNN # This is another model we have in mind
 
 def train_epoch(cfg, train_loader, model, criterion, optimizer, device, best_loss, epoch):
     loading_bar = tqdm(train_loader)
@@ -91,7 +92,8 @@ def main(cfg: OmegaConf):
 
 
     # load the model
-    model = SimpleCNN()
+    model = SelfMadeResNet(num_blocks=[3, 4], num_classes=18)
+    # model = CustomCNN(num_classes = 18)
     model.to(device)
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=cfg.train.learning_rate)
