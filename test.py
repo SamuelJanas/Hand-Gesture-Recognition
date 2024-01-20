@@ -3,6 +3,7 @@ import mediapipe as mp
 import imutils
 import torch
 from model.CustomCNN import CustomResNet18 
+import torchvision.transforms.functional as TF
 from model.SelfMadeCNN import SelfMadeResNet
 
 mpHands = mp.solutions.hands
@@ -17,7 +18,7 @@ def process_image(img):
     # Returning the detected hands to calling function
     return results
 
-def draw_hand_connections(img, results, return_image=False, size=200, draw=True):
+def draw_hand_connections(img, results, return_image=False, size=200, draw=True, predict=True):
     h, w, c = img.shape
     hand_images = []
     if results.multi_hand_landmarks:
@@ -52,9 +53,13 @@ def draw_hand_connections(img, results, return_image=False, size=200, draw=True)
                 if y_center + size > h:
                     y_center = h - size
                 hand_images.append(img[y_center-size:y_center+size, x_center-size:x_center+size])
-                tensor = torch.from_numpy(hand_images[-1]).permute(2, 0, 1).unsqueeze(0).float().to('cuda')
-                output = model(tensor)
-                cv2.putText(img, label_names[output.argmax(dim=1, keepdim=True).item()], (x_center, y_center), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                if predict:
+                    x = TF.to_tensor(hand_images[-1])
+                    x = TF.resize(x, (400, 400), antialias=True)
+                    x.unsqueeze_(0)
+                    output = model(x.to('cuda'))
+                    predicted_class = label_names[torch.argmax(output).item()]
+                    cv2.putText(img, predicted_class, (x_center, y_center), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
 
     return img, hand_images
 
@@ -67,20 +72,30 @@ label_names = ['call', 'dislike', 'fist', 'four', 'like', 'mute', 'ok', 'one', '
 
 cap = cv2.VideoCapture(0)
 draw_boxes = False
+predict = True
 while True:
 
     success, image = cap.read()
     image = imutils.resize(image, width=1000, height=800)
     results = process_image(image)
-    img, hand_fragments = draw_hand_connections(image, results, return_image=True, draw=draw_boxes)
+    img, hand_fragments = draw_hand_connections(image, 
+                                                results, 
+                                                return_image=True, 
+                                                draw=draw_boxes, 
+                                                predict = predict,
+                                                )
 
     # Displaying the output
     cv2.imshow("Hand tracker", image)
 
     if len(hand_fragments) > 0:
         for i, hand in enumerate(hand_fragments):
-            # display 3 most probable classes
+
             cv2.imshow(f"Hand {i}", hand)
+            break
+        
+    if cv2.waitKey(1) == ord('p'):
+        predict = not predict
 
     if cv2.waitKey(1) == ord('d'):
         draw_boxes = not draw_boxes

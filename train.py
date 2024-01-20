@@ -93,8 +93,8 @@ def main(cfg: OmegaConf):
 
     # load the model
     # model = SelfMadeResNet(num_blocks=[3, 4], num_classes=18)
-    model = CustomResNet18(num_classes = 18)
-    # model = CustomCNN(num_classes = 18)
+    # model = CustomResNet18(num_classes = 18)
+    model = CustomCNN(in_channels=3, num_classes=18)
     model.to(device)
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=cfg.train.learning_rate)
