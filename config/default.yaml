@@ -1,0 +1,15 @@
+seed: 23
+run_name: 'resnet9'
+
+train:
+  learning_rate: 3e-4
+  batch_size: 16
+  num_epochs: 5
+
+data:
+  path: 'data/train/'
+  num_workers: 4
+  split_ratio: 0.8
+  image_size: 200
+
+
