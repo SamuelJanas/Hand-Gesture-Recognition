@@ -2,13 +2,13 @@
 
 <div style="text-align:center">
    <p>Samuel Janas 151927, Bruno Urbaniak 151955</p>
-   <img src="images/demo_to_switch.gif" alt="Demo GIF" width="50%">
+   <img src="images/essa.gif" alt="Demo GIF" width="50%">
 </div>
 
 
 
 ## 1. **Description of the Data Set:**
-   - We decided to work on dataset called HaGRID Classification 512p (Hand Gesture Recognition Dataset) with 509,153 training images. This dataset is a modified HaGRID dataset for image classification instead of object recognition. It contains 19 classes of cropped out hand gestures with resolution of 512x512 pixels. For training and testing pourposes we decided to use 5500 images from each class.
+   - We decided to work on dataset called HaGRID Classification 512p (Hand Gesture Recognition Dataset) with 509,153 training images. This dataset is a modified HaGRID dataset for image classification instead of object recognition. It contains 18 classes of cropped out hand gestures with resolution of 512x512 pixels. For training and testing pourposes we decided to use 5500 images from each class.
 
   
 <div>
@@ -20,11 +20,11 @@
 
 ## 2. Problem Description
 
-   - The problem we are trying to solve is to recognize hand gestures in a real-time video stream. This task requiers two main subtasks to be solved:
-     -  recognition and tracking of a hand in a video - done with OpenCV
-     -  **successfully classifying the gesture** - our main focus
+   - The problem we are trying to solve is to recognize hand gestures in a real-time video stream. This task requires two main subtasks to be solved:
+     -  recognition and tracking of a hand in a video
+     -  successfully classifying the gesture
 
-## 3. Used Architectures #TODO
+## 3. Used Architectures
 
 We defined two custom neural network architectures - **CustomCNN** and **SelfMadeResNet**. Both being inspired by the ResNet architecture.
 
@@ -65,17 +65,18 @@ We defined two custom neural network architectures - **CustomCNN** and **SelfMad
 
 ------------
 
-   - Include diagrams showing the layers. #TODO
-   - If applicable, show blocks and connections separately for large models. #TODO
+### Diagram of the model
+https://github.com/SamuelJanas/Hand-Gesture-Recognition/blob/main/Digraph.gv.pdf
 
-## 4. Model Analysis #TODO
+## 4. Model Analysis
 
-   - Discuss the size in memory.
-   - Specify the number of parameters.
-  
 ### Size in Memory
-
+ - Forward/backward pass size (MB): 444.07
+ - Params size (MB): 25.10
+ - Estimated Total Size (MB): 469.75
 ### Number of Parameters
+ - number of parameters: **6579474**
+
 
 ## 5. Training Details
 
@@ -130,14 +131,12 @@ We defined two custom neural network architectures - **CustomCNN** and **SelfMad
 - The main function `main()` initializes wandb, sets the seed, loads the model, optimizer, and criterion, loads the data, and runs the training and testing loops for a specified number of epochs.
 
 
-## 6. Metrics, Loss, and Evaluation #TODO
+## 6. Metrics, Loss, and Evaluation
 
-   - Describe the metrics used for evaluation.
-   - Explain the chosen loss function.
-   - Present evaluation results.
 ### Metrics
 - **Accuracy:** The accuracy is the ratio of correct predictions to the total number of predictions. It is a common metric for classification tasks.
-- #TODO
+- **Precision**: Precision is the ratio of true positives to the sum of true positives and false positives.
+- **Recall:** Recall is the ratio of true positives to the sum of true positives and false negatives.
   
 ### Loss Function
 - **Cross-entropy Loss:** The cross-entropy loss is a common loss function for classification tasks. It is used to measure the performance of a classification model whose output is a probability value between 0 and 1. The loss is calculated as the negative log-likelihood of the correct class. The loss is minimized by maximizing the log-likelihood of the correct class.
@@ -146,16 +145,24 @@ We defined two custom neural network architectures - **CustomCNN** and **SelfMad
 ## 7. Plots
 Here are some plots from our training and testing process of our best model.
 
-### Loss
-<img src="images/loss.png">
+### Test Accuracy
+<img src="images/test_acc.png">
+
+### Test Precision
+<img src="images/test_precision.png">
+
+### Test Recall
+<img src="images/test_recall.png">
 
 ### Test Loss
 <img src="images/test_loss.png">
 
-### Accuracy
-<img src="images/acc.png">
+### Train Loss
+<img src="images/train_loss.png">
 
 ## 8. Hyperparameters
+
+We performed a hyperparameter tuning experiments using Weights and Biases (wandb). The following hyperparameters were selected for the final model:
 
 ### Learning Rate:
    - **Value:** `3e-4`
@@ -170,31 +177,40 @@ Here are some plots from our training and testing process of our best model.
    - **Explanation:** The number of epochs represents how many times the model will iterate over the entire training dataset. Setting it to `5` is beneficial for quicker experimentation justified with quick convergence of the model.
 
 
-## 9. Model Comparison #TODO
+## 9. Model Comparison
 
-   - Compare different models used in the project.
+We tried to compare a pretrained ResNet model with our own architecture. During the evaluation, we found that our custom architecture consistently outperformed the pretrained ResNet-9 model in terms of accuracy. In the end, based on the empirical results and validation metrics, we decided to use our own architecture over transfer learning with ResNet-9. This choice was driven by the observed higher accuracy and better alignment with the nuances of the dataset.
 
 ## 10. Libraries and Tools
 
-The `requirements.txt` can be found in Git.
-
-### Tools:
-- **Hydra:** Configuration management
-- **Weights and Biases (wandb):** Experiment tracking
-- **PyTorch:** Deep learning framework
+List of all tools and libraries used in the project:
+- `torch` - Core PyTorch library for tensor operations and neural network functionalities.
+- `wandb` - Weights and Biases for experiment tracking, logging, and visualization.
+- `hydra` - Configuration management for the project.
+- `tqdm` - Provides progress bars for iterations, useful for displaying loading progress.
+- `torchvision` - Extends PyTorch with datasets, models, and transforms for computer vision tasks.
+- `matplotlib.pyplot` - Plotting library for creating visualizations.
+- `OmegaConf` - Used for managing configuration settings in a hierarchical manner.
+- `PIL` (Pillow) - Python Imaging Library for image processing tasks.
+- `numpy` - Essential for various numerical operations in Python.
+- `mediapipe` - Framework for building multimodal (e.g., hands, face, etc.) perceptual pipelines.
+- `imutils` - Provides convenience functions for OpenCV.
+- `cv2` - OpenCV, a library for computer vision tasks.
+- `shutil` - Provides high-level file operations, used for file and directory management.
+- `mp` (Mediapipe) - Framework for building multimodal (e.g., hands, face, etc.) perceptual pipelines.
 
 
 ## 11. Runtime Environment
 
 ### Runtime Environment:
 
-- **Operating System:** Windows 10
+- **Operating System:** Windows 11
 - **Python Version:** 3.10
-- **Required Packages:** `requirements.txt`
+- **Required Packages:** https://wandb.ai/sjanas/hand-gesture-recognition/runs/zidm4c75/files/requirements.txt
 
 ### Training Time:
 - **Training Duration:** Approximately 2 hours
-- **GPU Utilization:** https://wandb.ai/sjanas/hand-gesture-recognition/runs/2l48z5ja/system?workspace=user-sneakyinsect
+- **GPU Utilization:** https://wandb.ai/sjanas/hand-gesture-recognition/runs/zidm4c75/system?workspace=user-
 
 
 ### Additional Information:
@@ -209,23 +225,28 @@ The `requirements.txt` can be found in Git.
 
 
 
-## 12. Bibliography #TODO
+## 12. Bibliography
 
    - HaGRID dataset: https://www.kaggle.com/datasets/kapitanov/hagrid
    - HaGRID Classification 512p dataset: https://www.kaggle.com/datasets/innominate817/hagrid-classification-512p
-   - #TODO
+   - ResNet-9 Git: https://github.com/Moddy2024/ResNet-9
+   - Wandb: https://wandb.ai/sjanas/hand-gesture-recognition/runs/zidm4c75?workspace=user-
 
 ## 13. Table of Completed Items with Points #TODO
 
 | Item                         | Points |
 |------------------------------|--------|
-| Problem         |    1    |
-| Evaluation on a set with at least 10000 photos          |    1    |
-|          |    1    |
-|Hydra              |    1    |
+|Pose Estimation         |    4    |
+|Own architecture         |    2    |
+|Each subsequent model with a different architecture         |    1    |
+|Evaluation on a set with at least 10000 photos          |    1    |
+|Hyperparamiter Tuning         |    1    |
+|Data Augmentation |  1  |
+|MLOps: Torchviz          |    1    |
+|MLOps: Hydra              |    1    |
 |Weights & Biases         |    1    |
-|MLOps       |    1    |
-| SUM =                  |    6    |
+|**Live Demo**        |    100    |
+| SUM =                  |    113    |
 
 ## 14. Git Repository
 
