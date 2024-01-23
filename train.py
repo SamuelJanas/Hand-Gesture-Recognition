@@ -5,6 +5,7 @@ from tqdm import tqdm
 from omegaconf import OmegaConf
 from utils.data import load_data
 from utils.utils import set_seed
+from sklearn.metrics import precision_score, recall_score
 
 from model.SelfMadeCNN import SelfMadeResNet
 from model.CustomCNN import CustomCNN, CustomResNet18 # This is another model we have in mind
@@ -27,8 +28,9 @@ def train_epoch(cfg, train_loader, model, criterion, optimizer, device, best_los
 
         losses.append(loss.item())
 
-        if batch_idx % 10 == 0:
-            wandb.log({'loss': loss.item()})
+        wandb.log(
+            {'train/loss': loss.item()}
+        )
 
 
         loading_bar.set_description(f'Epoch: {epoch} Loss: {loss.item():.6f}')
@@ -51,6 +53,9 @@ def test_epoch(cfg, test_loader, model, criterion, device, best_acc, epoch):
     model.eval()
     test_loss = 0
     correct = 0
+    all_preds = []
+    all_targets = []
+
     with torch.no_grad():
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
@@ -61,12 +66,20 @@ def test_epoch(cfg, test_loader, model, criterion, device, best_acc, epoch):
             pred = output.argmax(dim=1, keepdim=True)
             correct += pred.eq(target.view_as(pred)).sum().item()
 
+            all_preds.extend(pred.cpu().numpy())
+            all_targets.extend(target.cpu().numpy())
+
     test_loss /= len(test_loader.dataset)
     acc = 100. * correct / len(test_loader.dataset)
 
-    wandb.log({'test_loss': test_loss, 'acc': acc})
+    # Calculate precision and recall
+    precision = precision_score(all_targets, all_preds, average='weighted')
+    recall = recall_score(all_targets, all_preds, average='weighted')
 
-    print(f'\nTest set: Average loss: {test_loss:.4f}, Accuracy: {correct}/{len(test_loader.dataset)} ({acc:.2f}%)\n')
+    wandb.log({'test/loss': test_loss, 'test/acc': acc, 'test/precision': precision, 'test/]recall': recall})
+
+    print(f'\nTest set: Average loss: {test_loss:.4f}, Accuracy: {correct}/{len(test_loader.dataset)} ({acc:.2f}%)')
+    print(f'Precision: {precision:.4f}, Recall: {recall:.4f}\n')
 
     # checkpoint if best model.
     if acc > best_acc:
@@ -77,6 +90,7 @@ def test_epoch(cfg, test_loader, model, criterion, device, best_acc, epoch):
             'state_dict': model.state_dict(),
         }
         torch.save(checkpoint, f'checkpoints/{cfg.run_name}_best_acc.pth')
+
     return best_acc
 
 @hydra.main(version_base=None, config_path='config', config_name='default')
