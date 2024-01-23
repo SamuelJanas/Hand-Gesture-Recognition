@@ -94,16 +94,16 @@ while True:
     # if len(hand_fragments) > 0:
     #     for i, hand in enumerate(hand_fragments):
     #         cv2.imshow(f"Hand {i}", hand)
-        
-    if cv2.waitKey(1) == ord('p'):
+    
+    key = cv2.waitKey(10)
+
+    if key == ord('p'):
         predict = not predict
 
-    if cv2.waitKey(1) == ord('d'):
+    if key == ord('d'):
         draw_boxes = not draw_boxes
 
-    # Exit condition
-    # FIXME: This is not working
-    if cv2.waitKey(1) == ord('q'):
+    if key == ord('q'):
         cv2.destroyAllWindows()
         break
     
