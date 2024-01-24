@@ -2,7 +2,6 @@
 
 <div style="text-align:center">
    <p>Samuel Janas 151927, Bruno Urbaniak 151955</p>
-   <img src="images/essa.gif" alt="Demo GIF" width="50%">
 </div>
 
 
