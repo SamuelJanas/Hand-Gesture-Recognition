@@ -1,7 +1,7 @@
 # Hand-Gesture-Recognition Report
 
 <div style="text-align:center">
-   <p>Samuel Janas 151927, Bruno Urbaniak 151955</p>
+   <p>Samuel Janas, Bruno Urbaniak</p>
 </div>
 
 
